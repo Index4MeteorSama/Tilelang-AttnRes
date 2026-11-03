@@ -1,6 +1,6 @@
 # Tilelang-AttnRes
 
-This repository provides a highly optimized, deeply fused GPU kernel implemented in [TileLang](https://github.com/tile-ai/tilelang) for attention residual architectures.
+This repository implements the [Attention Residual](https://arxiv.org/pdf/2603.15031) architecture from Kimi K3 using [TileLang](https://github.com/tile-ai/tilelang).
 
 ### 1. Speed test (on RTX 5080)
 
