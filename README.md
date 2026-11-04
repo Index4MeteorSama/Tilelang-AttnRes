@@ -8,6 +8,6 @@ Tested with input shape `[1280, 8, 7168]` and `bfloat16` precision.
 
 | Implementation | Latency (ms) | Speedup |
 | :--- | :--- | :--- |
-| **PyTorch Eager** | 4.708 | 1.00x (Baseline) |
-| **Torch Compile** | 1.111 | 4.23x |
-| **TileLang (Ours)** | **0.238** | **19.78x** |
+| **PyTorch Eager** | 4.694 | 1.00x (Baseline) |
+| **Torch Compile** | 1.110 | 4.23x |
+| **TileLang** | **0.248** | **18.93x** |

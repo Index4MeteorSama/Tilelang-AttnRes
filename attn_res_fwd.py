@@ -108,16 +108,18 @@ def block_residual_fwd_kernel(
 
             T.reduce_max(hidden_dot_sum_ptx, hidden_weight_max, dim=-1)
 
+            idx_ptx = T.alloc_fragment((total_block,), T.int64)
             idx_sum = T.alloc_fragment((1,), T.int64)
-            T.clear(idx_sum)
+            T.clear(idx_ptx)
 
             for i in T.Parallel(total_block):
-                idx_sum[0] += T.if_then_else(
+                idx_ptx[i] += T.if_then_else(
                     hidden_dot_sum_ptx[i] == hidden_weight_max[0],
                     T.cast(i, T.int64),
                     T.int64(0.0),  # ty: ignore
                 )
 
+            T.reduce_sum(idx_ptx, idx_sum, dim=-1)
             T.copy(idx_sum, max_output[token, :])
 
             for i in T.Parallel(total_block):
