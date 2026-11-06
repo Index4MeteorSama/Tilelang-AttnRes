@@ -4,7 +4,7 @@ This repository implements the [Attention Residual](https://arxiv.org/pdf/2603.1
 
 ### 1. Benchmark (RTX 5080, Windows 11, bf16)
 
-Tested with input shape `[1280, 8, 7168]` and `bfloat16` precision.
+Tested with input shape `[1280, 8, 7168] | [15360, 8, 768] | [768, 1, 4096]` and `bfloat16` precision.
 
 | Shape (num_tokens x num_blocks x hidden_size) | Implementation | Latency (ms) / Speedup |
 | :--- | :--- | :--- |
@@ -50,6 +50,7 @@ output, rsqrt, max_idx, exp_out, div_out, softmax_out = block_residual_fwd(
 # div_out:     (num_tokens, 1)                    fp32
 # softmax_out: (num_tokens, num_blocks + 1)       fp32
 ```
+> **Note**: Current version is forward-only. The intermediate tensors are returned for analysis/debugging purposes. You can discard them in production to save memory.
 
 ### 3. Future
 Implement backward
