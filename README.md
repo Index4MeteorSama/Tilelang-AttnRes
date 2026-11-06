@@ -1,4 +1,4 @@
-# Tilelang-AttnRes
+# Tilelang-AttnRes(forward only)
 
 This repository implements the [Attention Residual](https://arxiv.org/pdf/2603.15031) architecture from Kimi K3 using [TileLang](https://github.com/tile-ai/tilelang).
 
@@ -49,3 +49,19 @@ output, rsqrt, max_idx, exp_out, div_out, softmax_out = block_residual_fwd(
 # exp_out:     (num_tokens, num_blocks + 1)       fp32
 # div_out:     (num_tokens, 1)                    fp32
 # softmax_out: (num_tokens, num_blocks + 1)       fp32
+```
+
+### 3. Future
+Implement backward
+
+### 4. Citation
+```bib
+@misc{chen2026attnres,
+  title         = {Attention Residuals},
+  author        = {Kimi Team  and Chen, Guangyu  and Zhang, Yu  and Su, Jianlin  and Xu, Weixin  and Pan, Siyuan  and Wang, Yaoyu  and Wang, Yucheng  and Chen, Guanduo  and Yin, Bohong  and Chen, Yutian  and Yan, Junjie  and Wei, Ming  and Zhang, Y.  and Meng, Fanqing  and Hong, Chao  and Xie, Xiaotong  and Liu, Shaowei  and Lu, Enzhe  and Tai, Yunpeng  and Chen, Yanru  and Men, Xin  and Guo, Haiqing  and Charles, Y.  and Lu, Haoyu  and Sui, Lin  and Zhu, Jinguo  and Zhou, Zaida  and He, Weiran  and Huang, Weixiao  and Xu, Xinran  and Wang, Yuzhi  and Lai, Guokun  and Du, Yulun  and Wu, Yuxin  and Yang, Zhilin  and Zhou, Xinyu},
+  year          = {2026},
+  archiveprefix = {arXiv},
+  eprint        = {2603.15031},
+  primaryclass  = {cs.CL}
+}
+```
