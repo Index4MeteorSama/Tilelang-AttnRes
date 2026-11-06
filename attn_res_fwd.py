@@ -8,9 +8,9 @@ from tilelang.autotuner import set_autotune_inputs
 @tilelang.autotune(
     configs=[
         {"block_size": bs, "threads": th, "num_stages": ns}
-        for bs in [128, 256, 512, 1024]
-        for th in [64, 128, 256]
-        for ns in [1, 2, 3, 4]
+        for bs in [256, 512, 1024]
+        for th in [64]
+        for ns in [1, 2, 3]
     ],
     warmup=4,
     rep=512,
@@ -27,9 +27,9 @@ def block_residual_fwd_kernel(
     dtype,
     weight_dtype,
     eps=1e-6,
-    block_size=512,
-    threads=128,
-    num_stages: int = 4,
+    block_size=1024,
+    threads=64,
+    num_stages: int = 2,
     accum_dtype=T.float32,
 ):
     num_token = T.dynamic("num_token")
@@ -110,16 +110,14 @@ def block_residual_fwd_kernel(
 
             idx_ptx = T.alloc_fragment((total_block,), T.int64)
             idx_sum = T.alloc_fragment((1,), T.int64)
-            T.clear(idx_ptx)
 
             for i in T.Parallel(total_block):
-                idx_ptx[i] += T.if_then_else(
+                idx_ptx[i] = T.if_then_else(
                     hidden_dot_sum_ptx[i] == hidden_weight_max[0],
                     T.cast(i, T.int64),
-                    T.int64(0.0),  # ty: ignore
+                    T.int64(total_block),  # ty: ignore
                 )
-
-            T.reduce_sum(idx_ptx, idx_sum, dim=-1)
+            T.reduce_min(idx_ptx, idx_sum, dim=-1)
             T.copy(idx_sum, max_output[token, :])
 
             for i in T.Parallel(total_block):
@@ -224,16 +222,16 @@ if __name__ == "__main__":
         return hidden_states.to(v.dtype)
 
     dtype = torch.bfloat16
-    shape = (1280, 8, 7168)
+    shape = (768, 1, 4096)
 
     torch.manual_seed(0)
     bs, N, H = shape
     prefix_sum = torch.randn(bs, H, dtype=dtype, device="cuda")
     block_residual = torch.randn(bs, N, H, dtype=dtype, device="cuda")
 
-    w = torch.ones(H, dtype=torch.float32, device="cuda")
+    w = torch.randn(H, dtype=torch.float32, device="cuda")
 
-    w2 = torch.ones(H, dtype=torch.float32, device="cuda")
+    w2 = torch.randn(H, dtype=torch.float32, device="cuda")
 
     def Tilelang():
         return block_residual_fwd(block_residual, prefix_sum, w, w2)[0]
@@ -245,15 +243,24 @@ if __name__ == "__main__":
     def Torch():
         return _apply_attn_res(prefix_sum, block_residual, w, w2)
 
-    print(f"===shape: {list(shape)}===")
+    print(f"=== shape: {list(shape)} ===")
+
+    print("\n=== benchmark ===")
     torch.cuda.empty_cache()
-    print("Tilelang:", do_bench(Tilelang, warmup=100))
+    result_tilelang = do_bench(Tilelang, warmup=100)
+    print("Tilelang:", result_tilelang)
 
     torch.cuda.empty_cache()
-    print("Torch:", do_bench(Torch, warmup=100))
+    result_torch = do_bench(Torch, warmup=100)
+    print("Torch:", result_torch)
 
     torch.cuda.empty_cache()
-    print("Torch compile:", do_bench(Torch_compile, warmup=100))
+    result_torch_compile = do_bench(Torch_compile, warmup=100)
+    print("Torch compile:", result_torch_compile)
+
+    print("\n=== speedup ===")
+    print(f"Tilelang speedup: {result_torch / result_tilelang}")  # ty: ignore
+    print(f"Torch Compile speedup: {result_torch / result_torch_compile}")  # ty: ignore
 
     with profile(
         activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
